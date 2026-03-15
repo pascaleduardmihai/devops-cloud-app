@@ -39,6 +39,6 @@ jobs:
         IMAGE_TAG: ${{ github.sha }}
       run: |
         # Folosim sed pentru a injecta dinamic imaginea si endpoint-ul in YAML
-        sed -i "s|terraform_user.dkr.ecr.eu-north-1.amazonaws.com/task-backend:latest|$ECR_REGISTRY/task-backend:$IMAGE_TAG|g" k8s/backend-deploy.yaml
+        sed -i "s|<ACCOUNT_ID>.dkr.ecr.eu-north-1.amazonaws.com/task-backend:latest|$ECR_REGISTRY/task-backend:$IMAGE_TAG|g" k8s/backend-deploy.yaml
         sed -i "s|value: \"taskdb.*\"|value: \"${{ secrets.RDS_HOSTNAME }}\"|g" k8s/backend-deploy.yaml
         kubectl apply -f k8s/backend-deploy.yaml
