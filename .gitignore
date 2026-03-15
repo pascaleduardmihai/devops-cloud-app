@@ -1,0 +1,30 @@
+# --- TERRAFORM ---
+# Ignorăm folderul cu binarele și modulele descărcate
+.terraform/
+# Ignorăm fișierele de stare (foarte important pentru securitate!)
+*.tfstate
+*.tfstate.backup
+# Ignorăm fișierele de variabile care pot conține parole
+*.tfvars
+*.tfvars.json
+
+# --- PYTHON (Backend) ---
+# Fișiere compilate
+__pycache__/
+*.py[cod]
+*$py.class
+# Medii virtuale
+venv/
+.env
+
+# --- SISTEM & IDE ---
+# Fișiere specifice Mac sau Windows
+.DS_Store
+Thumbs.db
+# Setări pentru VS Code sau IntelliJ
+.vscode/
+.idea/
+
+# --- DOCKER ---
+# Dacă ai log-uri sau fișiere temporare de build
+*.log

@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: task-backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: task-backend
+  template:
+    metadata:
+      labels:
+        app: task-backend
+    spec:
+      containers:
+      - name: task-backend
+        image: 235494779770.dkr.ecr.eu-north-1.amazonaws.com/task-backend:latest
+        env:
+        - name: DB_HOST
+          value: "terraform-20260315114218582300000001.cr4syk4ka8ib.eu-north-1.rds.amazonaws.com" # Pune aici endpoint-ul tău real
+        - name: DB_USER
+          value: "postgres"
+        - name: DB_PASSWORD
+          value: "parola_secreta_123"
+        - name: DB_NAME
+          value: "taskdb"
+        ports:
+        - containerPort: 8000
+        resources:
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+          requests:
+            cpu: "250m"
+            memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: task-backend-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: task-backend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000

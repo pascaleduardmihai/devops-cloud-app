@@ -1,0 +1,44 @@
+name: Deploy to EKS
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+
+    - name: Build, tag, and push Backend to ECR
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        docker build -t $ECR_REGISTRY/task-backend:$IMAGE_TAG ./app/backend
+        docker push $ECR_REGISTRY/task-backend:$IMAGE_TAG
+
+    - name: Update kubeconfig
+      run: aws eks update-kubeconfig --name task-manager-cluster --region ${{ secrets.AWS_REGION }}
+
+    - name: Deploy to EKS
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        # Folosim sed pentru a injecta dinamic imaginea si endpoint-ul in YAML
+        sed -i "s|<ACCOUNT_ID>.dkr.ecr.eu-north-1.amazonaws.com/task-backend:latest|$ECR_REGISTRY/task-backend:$IMAGE_TAG|g" k8s/backend-deploy.yaml
+        sed -i "s|value: \"taskdb.*\"|value: \"${{ secrets.RDS_HOSTNAME }}\"|g" k8s/backend-deploy.yaml
+        kubectl apply -f k8s/backend-deploy.yaml
