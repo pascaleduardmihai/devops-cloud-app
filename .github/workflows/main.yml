@@ -11,6 +11,11 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
+    - name: Debug Secrets
+      run: |
+        if [ -z "${{ secrets.AWS_REGION }}" ]; then echo "REGION is EMPTY"; else echo "REGION is SET"; fi
+        if [ -z "${{ secrets.AWS_ACCESS_KEY_ID }}" ]; then echo "KEY is EMPTY"; else echo "KEY is SET"; fi
+
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v2
       with:
