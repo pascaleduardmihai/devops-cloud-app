@@ -21,7 +21,7 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: eu-north-1
+        aws-region: ${{ secrets.AWS_REGION }}
 
     - name: Login to Amazon ECR
       id: login-ecr
@@ -36,7 +36,7 @@ jobs:
         docker push $ECR_REGISTRY/task-backend:$IMAGE_TAG
 
     - name: Update kubeconfig
-      run: aws eks update-kubeconfig --name task-manager-cluster --region eu-north-1
+      run: aws eks update-kubeconfig --name task-manager-cluster --region ${{ secrets.AWS_REGION }}
 
     - name: Deploy to EKS
       env:
@@ -51,5 +51,8 @@ jobs:
 
         # 3. Ne asigurăm că DB_NAME rămâne taskdb (sau ce ai setat în RDS)
         sed -i "/name: DB_NAME/{n;s|value: \".*\"|value: \"taskdb\"|}" k8s/backend-deploy.yaml
+
+        # Injectăm DB_PASSWORD (căutăm linia după name: DB_PASSWORD)
+        sed -i "/name: DB_PASSWORD/{n;s|value: \".*\"|value: \"${{ secrets.DB_PASSWORD }}\"|}" k8s/backend-deploy.yaml
 
         kubectl apply -f k8s/backend-deploy.yaml
