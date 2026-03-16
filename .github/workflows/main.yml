@@ -43,10 +43,13 @@ jobs:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         IMAGE_TAG: ${{ github.sha }}
       run: |
-        # Injectăm imaginea nouă
+        # 1. Injectăm imaginea (căutăm linia cu image:)
         sed -i "s|image: .*|image: $ECR_REGISTRY/task-backend:$IMAGE_TAG|g" k8s/backend-deploy.yaml
-        
-        # Injectăm endpoint-ul RDS (căutăm linia de după DB_HOST)
+
+        # 2. Injectăm DB_HOST (doar linia de după name: DB_HOST)
         sed -i "/name: DB_HOST/{n;s|value: \".*\"|value: \"${{ secrets.RDS_HOSTNAME }}\"|}" k8s/backend-deploy.yaml
-        
+
+        # 3. Ne asigurăm că DB_NAME rămâne taskdb (sau ce ai setat în RDS)
+        sed -i "/name: DB_NAME/{n;s|value: \".*\"|value: \"taskdb\"|}" k8s/backend-deploy.yaml
+
         kubectl apply -f k8s/backend-deploy.yaml
