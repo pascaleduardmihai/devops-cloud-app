@@ -17,7 +17,7 @@ spec:
         image: 235494779770.dkr.ecr.eu-north-1.amazonaws.com/task-backend:latest
         env:
         - name: DB_HOST
-          value: "terraform-20260315114218582300000001.cr4syk4ka8ib.eu-north-1.rds.amazonaws.com" # Pune aici endpoint-ul tău real
+          value: "terraform-2026031617471230430000000d.cr4syk4ka8ib.eu-north-1.rds.amazonaws.com" # Pune aici endpoint-ul tău real
         - name: DB_USER
           value: "postgres"
         - name: DB_PASSWORD
