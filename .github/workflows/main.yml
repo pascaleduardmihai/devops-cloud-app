@@ -43,7 +43,10 @@ jobs:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         IMAGE_TAG: ${{ github.sha }}
       run: |
-        # Folosim sed pentru a injecta dinamic imaginea si endpoint-ul in YAML
-        sed -i "s|<ACCOUNT_ID>.dkr.ecr.eu-north-1.amazonaws.com/task-backend:latest|$ECR_REGISTRY/task-backend:$IMAGE_TAG|g" k8s/backend-deploy.yaml
-        sed -i "s|value: \"taskdb.*\"|value: \"${{ secrets.RDS_HOSTNAME }}\"|g" k8s/backend-deploy.yaml
+        # Injectăm imaginea nouă
+        sed -i "s|image: .*|image: $ECR_REGISTRY/task-backend:$IMAGE_TAG|g" k8s/backend-deploy.yaml
+        
+        # Injectăm endpoint-ul RDS (căutăm linia de după DB_HOST)
+        sed -i "/name: DB_HOST/{n;s|value: \".*\"|value: \"${{ secrets.RDS_HOSTNAME }}\"|}" k8s/backend-deploy.yaml
+        
         kubectl apply -f k8s/backend-deploy.yaml
