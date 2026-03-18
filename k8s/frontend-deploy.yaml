@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: task-frontend
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: task-frontend
@@ -14,9 +14,12 @@ spec:
     spec:
       containers:
       - name: task-frontend
-        image: 235494779770.dkr.ecr.eu-north-1.amazonaws.com/task-frontend:latest
+        image: <ACCOUNT_ID>.dkr.ecr.eu-north-1.amazonaws.com/task-frontend:latest
         ports:
         - containerPort: 80
+        env:
+        - name: BACKEND_API_URL
+          value: "http://pending-backend-url" # <--- Aici va scrie GitHub Actions
 ---
 apiVersion: v1
 kind: Service

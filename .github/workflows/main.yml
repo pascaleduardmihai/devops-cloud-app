@@ -56,3 +56,32 @@ jobs:
         sed -i "/name: DB_PASSWORD/{n;s|value: \".*\"|value: \"${{ secrets.DB_PASSWORD }}\"|}" k8s/backend-deploy.yaml
 
         kubectl apply -f k8s/backend-deploy.yaml
+        
+    - name: Build and Push Frontend to ECR
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        docker build -t $ECR_REGISTRY/task-frontend:$IMAGE_TAG ./app/frontend
+        docker push $ECR_REGISTRY/task-frontend:$IMAGE_TAG
+
+    - name: Get Backend LoadBalancer DNS
+      id: get-backend-dns
+      run: |
+        # Asteptam putin ca AWS sa aloce DNS-ul daca e prima data
+        sleep 15
+        BACKEND_URL=$(kubectl get svc task-backend-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+        echo "backend_dns=$BACKEND_URL" >> $GITHUB_OUTPUT
+
+    - name: Deploy Frontend to EKS
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        # Injectam imaginea ECR in frontend-deploy.yaml
+        sed -i "s|<ACCOUNT_ID>.dkr.ecr.eu-north-1.amazonaws.com/task-frontend:latest|$ECR_REGISTRY/task-frontend:$IMAGE_TAG|g" k8s/frontend-deploy.yaml
+
+        # Injectam URL-ul backend-ului preluat anterior
+        sed -i "s|value: \"http://pending-backend-url\"|value: \"http://${{ steps.get-backend-dns.outputs.backend_dns }}\"|g" k8s/frontend-deploy.yaml
+
+        kubectl apply -f k8s/frontend-deploy.yaml
